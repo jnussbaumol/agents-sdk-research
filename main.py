@@ -1,34 +1,20 @@
 from dotenv import load_dotenv
 from os import getenv
-from openai import AsyncAzureOpenAI
+from sys import exit as sysexit
 from agents import (
     Agent,
     Runner,
-    set_default_openai_client,
-    set_default_openai_api,
-    set_tracing_disabled,
+    tracing,
 )
 import asyncio
 
 
 def setup() -> Agent:
     load_dotenv()
-    endpoint = getenv("AZURE_OPENAI_ENDPOINT")
-    if endpoint is None:
-        # my LSP throws a fit about a "str | None" union if i don't check this
-        print("missing endpoint")
-        exit(1)
-
-    # this block is required to use the Azure OpenAI service
-    azure_openai_client = AsyncAzureOpenAI(
-        api_key=getenv("AZURE_OPENAI_API_KEY"),
-        api_version=getenv("AZURE_OPENAI_API_VERSION"),
-        azure_endpoint=endpoint,
-        azure_deployment=getenv("AZURE_OPENAI_DEPLOYMENT"),
-    )
-    set_tracing_disabled(disabled=True)
-    set_default_openai_client(azure_openai_client)
-    set_default_openai_api("chat_completions")
+    tracing_api_key = getenv("OPENAI_API_KEY")
+    if tracing_api_key is None:
+        sysexit(1)
+    tracing.set_tracing_export_api_key(tracing_api_key)
 
     product_expert = Agent(
         name="Product Expert",
